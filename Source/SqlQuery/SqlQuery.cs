@@ -27,6 +27,8 @@ namespace LinqToDB.SqlQuery
 
 		public bool IsParameterDependent { get; set; }
 
+#region ProcessParameters
+
 		public SqlQuery ProcessParameters()
 		{
 			if (IsParameterDependent)
@@ -186,63 +188,53 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (p.Expr1 is SqlExpression)
+					if (p.Expr1 is ObjectSqlExpression)
 					{
-						var expr = (SqlExpression)p.Expr1;
+						var expr = (ObjectSqlExpression)p.Expr1;
 
-						if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
+						if (expr.Parameters.Length == 1)
 						{
-							var type  = items.GetListItemType();
-							var ta    = TypeAccessor.GetAccessor(type);
-							var names = expr.Expr.Substring(1).Split(',');
+							var values = new List<ISqlExpression>();
 
-							if (expr.Parameters.Length == 1)
+							foreach (var item in items)
 							{
-								var values = new List<ISqlExpression>();
-
-								foreach (var item in items)
-								{
-									var ma    = ta[names[0]];
-									var value = ma.GetValue(item);
-									values.Add(new SqlValue(value));
-								}
-
-								if (values.Count == 0)
-									return new SelectQuery.Predicate.Expr(new SqlValue(p.IsNot));
-
-								return new SelectQuery.Predicate.InList(expr.Parameters[0], p.IsNot, values);
+								var value = expr.GetValue(item, 0);
+								values.Add(new SqlValue(value));
 							}
 
-							{
-								var sc = new SelectQuery.SearchCondition();
+							if (values.Count == 0)
+								return new SelectQuery.Predicate.Expr(new SqlValue(p.IsNot));
 
-								foreach (var item in items)
-								{
-									var itemCond = new SelectQuery.SearchCondition();
-
-									for (var i = 0; i < expr.Parameters.Length; i++)
-									{
-										var sql   = expr.Parameters[i];
-										var value = ta[names[i]].GetValue(item);
-										var cond  = value == null ?
-											new SelectQuery.Condition(false, new SelectQuery.Predicate.IsNull  (sql, false)) :
-											new SelectQuery.Condition(false, new SelectQuery.Predicate.ExprExpr(sql, SelectQuery.Predicate.Operator.Equal, new SqlValue(value)));
-
-										itemCond.Conditions.Add(cond);
-									}
-
-									sc.Conditions.Add(new SelectQuery.Condition(false, new SelectQuery.Predicate.Expr(itemCond), true));
-								}
-
-								if (sc.Conditions.Count == 0)
-									return new SelectQuery.Predicate.Expr(new SqlValue(p.IsNot));
-
-								if (p.IsNot)
-									return new SelectQuery.Predicate.NotExpr(sc, true, PrecedenceLevel.LogicalNegation);
-
-								return new SelectQuery.Predicate.Expr(sc, PrecedenceLevel.LogicalDisjunction);
-							}
+							return new SelectQuery.Predicate.InList(expr.Parameters[0], p.IsNot, values);
 						}
+
+						var sc = new SelectQuery.SearchCondition();
+
+						foreach (var item in items)
+						{
+							var itemCond = new SelectQuery.SearchCondition();
+
+							for (var i = 0; i < expr.Parameters.Length; i++)
+							{
+								var sql   = expr.Parameters[i];
+								var value = expr.GetValue(item, i);
+								var cond  = value == null ?
+									new SelectQuery.Condition(false, new SelectQuery.Predicate.IsNull  (sql, false)) :
+									new SelectQuery.Condition(false, new SelectQuery.Predicate.ExprExpr(sql, SelectQuery.Predicate.Operator.Equal, new SqlValue(value)));
+
+								itemCond.Conditions.Add(cond);
+							}
+
+							sc.Conditions.Add(new SelectQuery.Condition(false, new SelectQuery.Predicate.Expr(itemCond), true));
+						}
+
+						if (sc.Conditions.Count == 0)
+							return new SelectQuery.Predicate.Expr(new SqlValue(p.IsNot));
+
+						if (p.IsNot)
+							return new SelectQuery.Predicate.NotExpr(sc, true, PrecedenceLevel.LogicalNegation);
+
+						return new SelectQuery.Predicate.Expr(sc, PrecedenceLevel.LogicalDisjunction);
 					}
 				}
 			}
@@ -260,6 +252,8 @@ namespace LinqToDB.SqlQuery
 
 			throw new InvalidOperationException();
 		}
+
+#endregion
 
 		#endregion
 	}

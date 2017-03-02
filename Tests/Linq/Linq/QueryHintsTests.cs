@@ -11,7 +11,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class QueryHintsTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB), Explicit("Fails")]
+		[Test, DataContextSource(ProviderName.Access, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57), Explicit("Fails")]
 		public void Comment(string context)
 		{
 			using (var db = GetDataContext(context))

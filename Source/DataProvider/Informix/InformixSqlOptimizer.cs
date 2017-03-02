@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.Informix
 				((SqlParameter)element).IsQueryParameter = false;
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery sqlQuery)
 		{
 			CheckAliases(sqlQuery, int.MaxValue);
 

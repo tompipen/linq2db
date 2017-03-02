@@ -46,7 +46,7 @@ namespace LinqToDB.Linq
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
-		public void FinalizeQuery(SqlQuery sqlQuery)
+		public void FinalizeQuery(SelectQuery sqlQuery)
 		{
 			SqlQuery = SqlOptimizer.Finalize(sqlQuery);
 

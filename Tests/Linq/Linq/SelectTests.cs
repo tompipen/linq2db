@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+#if !NETSTANDARD
 using System.Windows.Forms;
+#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -309,7 +312,7 @@ namespace Tests.Linq
 
 				var selectCount = ((DataConnection)db).LastQuery
 					.Split(' ', '\t', '\n', '\r')
-					.Count(s => s.Equals("select", StringComparison.InvariantCultureIgnoreCase));
+					.Count(s => s.Equals("select", StringComparison.OrdinalIgnoreCase));
 
 				Assert.AreEqual(1, selectCount, "Why do we need \"select from select\"??");
 			}
@@ -451,6 +454,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
+#if !NETSTANDARD
 		[Test, DataContextSource, Explicit("Fails")]
 		public void ConstractClass(string context)
 		{
@@ -463,6 +467,7 @@ namespace Tests.Linq
 						Tag        = f.ParentID
 					}).ToList();
 		}
+#endif
 
 		static string ConvertString(string s, int? i, bool b, int n)
 		{
@@ -525,14 +530,14 @@ namespace Tests.Linq
 		{
 			public class Factory : IObjectFactory
 			{
-				#region IObjectFactory Members
+#region IObjectFactory Members
 
 				public object CreateInstance(TypeAccessor typeAccessor)
 				{
 					return typeAccessor.CreateInstance();
 				}
 
-				#endregion
+#endregion
 			}
 
 			public int    PersonID;
@@ -615,5 +620,53 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource, Explicit("Fails")]
+		public void SelectComplex1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var r = db.GetTable<ComplexPerson>().First(_ => _.ID == 1);
+
+				Assert.IsNotEmpty(r.Name.Name.FirstName);
+				Assert.IsNotEmpty(r.Name.MiddleName);
+				Assert.IsNotEmpty(r.Name.Name.LastName);
+			}
+		}
+
+		[Test, DataContextSource, Explicit("Fails")]
+		public void SelectComplex2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var r = db.GetTable<ComplexPerson2>().First(_ => _.ID == 1);
+
+				Assert.IsNotEmpty(r.Name.Name.FirstName);
+				Assert.IsNotEmpty(r.Name.MiddleName);
+				Assert.IsNotEmpty(r.Name.Name.LastName);
+			}
+		}
+
+		[Test, DataContextSource, Explicit("Fails")]
+		public void SelectComplex3(string context)
+		{
+			var ms = new MappingSchema();
+			var b  = ms.GetFluentMappingBuilder();
+
+			b
+				.Entity<ComplexPerson3>()            .HasTableName ("Person")
+				.Property(_ => _.ID)                 .HasColumnName("PersonID")
+				.Property(_ => _.Name.Name.FirstName).HasColumnName("FirstName")
+				.Property(_ => _.Name.Name.LastName)  .HasColumnName("LastName")
+				.Property(_ => _.Name.MiddleName)     .HasColumnName("MiddleName");
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var r = db.GetTable<ComplexPerson3>().First(_ => _.ID == 1);
+
+				Assert.IsNotEmpty(r.Name.Name.FirstName);
+				Assert.IsNotEmpty(r.Name.MiddleName);
+				Assert.IsNotEmpty(r.Name.Name.LastName);
+			}
+		}
 	}
 }

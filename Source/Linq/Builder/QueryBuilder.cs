@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Finalize
 
-		public Expression FinalizeQuery(SqlQuery selectQuery, Expression expression)
+		public Expression FinalizeQuery(SelectQuery selectQuery, Expression expression)
 		{
 			expression = BuildBlock(expression);
 

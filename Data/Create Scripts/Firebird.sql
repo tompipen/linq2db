@@ -53,6 +53,30 @@ COMMIT;
 INSERT INTO  Dual (Dummy) VALUES ('X');
 COMMIT;
 
+DROP TABLE InheritanceParent;
+COMMIT;
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId INTEGER     NOT NULL PRIMARY KEY,
+	TypeDiscriminator   INTEGER,
+	Name                VARCHAR(50)
+);
+COMMIT;
+
+DROP TABLE InheritanceChild;
+COMMIT;
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  INTEGER     NOT NULL PRIMARY KEY,
+	InheritanceParentId INTEGER     NOT NULL,
+	TypeDiscriminator   INTEGER,
+	Name                VARCHAR(50)
+);
+COMMIT;
+
+
 -- Person Table
 
 CREATE TABLE Person
@@ -78,6 +102,8 @@ COMMIT;
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M');
 COMMIT;
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M');
+COMMIT;
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
 COMMIT;
 
 -- Doctor Table Extension

@@ -35,21 +35,21 @@ namespace Tests.Model
 		[NotColumn]
 		int IPerson.ID
 		{
-			get { return ID;  }
+			get { return ID; }
 			set { ID = value; }
 		}
 
 		[NotColumn]
 		Gender IPerson.Gender
 		{
-			get { return Gender;  }
+			get { return Gender; }
 			set { Gender = value; }
 		}
 
 		[NotColumn]
 		string IPerson.FirstName
 		{
-			get { return Name.Name.FirstName;  }
+			get { return Name.Name.FirstName; }
 			set { Name.Name.FirstName = value; }
 		}
 
@@ -66,5 +66,27 @@ namespace Tests.Model
 			get { return Name.Name.LastName;  }
 			set { Name.Name.LastName = value; }
 		}
+	}
+
+	[Table ("Person",     IsColumnAttributeRequired = false)]
+	[Column("FirstName",  "Name.FirstName")]
+	[Column("MiddleName", "Name.MiddleName")]
+	[Column("LastName",   "Name.LastName")]
+	public class ComplexPerson2 
+	{
+
+		[Identity]
+		[SequenceName(ProviderName.Firebird, "PersonID")]
+		[Column("PersonID", IsPrimaryKey = true)]
+		public int      ID     { get; set; }
+		public Gender   Gender { get; set; }
+		public FullName Name   { get; set; }
+	}
+
+	public class ComplexPerson3 
+	{
+		public int      ID     { get; set; }
+		public Gender   Gender { get; set; }
+		public FullName Name   { get; set; }
 	}
 }

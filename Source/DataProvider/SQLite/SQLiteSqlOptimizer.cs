@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery sqlQuery)
 		{
 			var selectQuery = (SelectQuery)base.Finalize(sqlQuery);
 

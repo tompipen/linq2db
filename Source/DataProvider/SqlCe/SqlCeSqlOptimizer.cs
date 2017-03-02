@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery sqlQuery)
 		{
 			var sql = (SelectQuery)base.Finalize(sqlQuery);
 

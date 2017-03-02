@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery sqlQuery)
 		{
 			CheckAliases(sqlQuery, int.MaxValue);
 

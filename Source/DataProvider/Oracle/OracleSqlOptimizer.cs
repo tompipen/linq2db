@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery sqlQuery)
 		{
 			CheckAliases(sqlQuery, 30);
 

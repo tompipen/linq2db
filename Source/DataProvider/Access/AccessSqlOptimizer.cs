@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery sqlQuery)
 		{
 			sqlQuery = base.Finalize(sqlQuery);
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NOFSHARP
+using System;
 
 using NUnit.Framework;
 
@@ -12,6 +13,30 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				FSharp.WhereTest.LoadSingle(db);
+		}
+
+		[Test, DataContextSource, Explicit("Fails")]
+		public void LoadSinglesWithPatient( string context)
+		{
+			using (var db = GetDataContext(context))
+				FSharp.WhereTest.LoadSinglesWithPatient( db);
+		}
+
+		[Test, DataContextSource, Explicit("Fails")]
+		public void LoadSingleWithOptions(string context)
+		{
+
+			var ms = Tests.FSharp.MappingSchema.Initialize();
+
+			using (var db = GetDataContext(context, ms))
+				FSharp.WhereTest.LoadSingleWithOptions(db);
+		}
+
+		[Test, DataContextSource, Explicit("Fails")]
+		public void LoadSingleCLIMutable(string context)
+		{
+			using (var db = GetDataContext(context))
+				FSharp.WhereTest.LoadSingleCLIMutable(db, null);
 		}
 
 		[Test, DataContextSource, Explicit("Fails")]
@@ -71,3 +96,4 @@ namespace Tests.Linq
 		}
 	}
 }
+#endif

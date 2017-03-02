@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.DB2
 				((SqlParameter)element).IsQueryParameter = false;
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery sqlQuery)
 		{
 			new QueryVisitor().Visit(((SelectQuery)sqlQuery).Select, SetQueryParameter);
 

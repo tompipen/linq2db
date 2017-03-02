@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
@@ -254,7 +253,23 @@ namespace LinqToDB.Data
 
 		#region Configuration
 
-		static IDataProvider FindProvider(string configuration, ICollection<KeyValuePair<string,IDataProvider>> ps, IDataProvider defp)
+		private static ILinqToDBSettings _defaultSettings = null;
+
+		public static ILinqToDBSettings DefaultSettings
+		{
+			get
+			{
+#if !NETSTANDARD
+				return _defaultSettings ?? (_defaultSettings = LinqToDBSection.Instance);
+#else
+				return _defaultSettings;
+#endif
+
+			}
+			set { _defaultSettings = value; }
+		}
+
+		static IDataProvider FindProvider(string configuration, IEnumerable<KeyValuePair<string,IDataProvider>> ps, IDataProvider defp)
 		{
 			foreach (var p in ps.OrderByDescending(kv => kv.Key.Length))
 				if (configuration == p.Key || configuration.StartsWith(p.Key + '.'))
@@ -272,7 +287,9 @@ namespace LinqToDB.Data
 			_configurationIDs = new ConcurrentDictionary<string,int>();
 
 			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
+#if !NETSTANDARD
 			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
+#endif
 			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();
 			LinqToDB.DataProvider.Firebird.  FirebirdTools.  GetDataProvider();
 			LinqToDB.DataProvider.MySql.     MySqlTools.     GetDataProvider();
@@ -284,14 +301,14 @@ namespace LinqToDB.Data
 			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
 			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
 
-			var section = LinqToDBSection.Instance;
+			var section = DefaultSettings;
 
 			if (section != null)
 			{
 				DefaultConfiguration = section.DefaultConfiguration;
 				DefaultDataProvider  = section.DefaultDataProvider;
 
-				foreach (DataProviderElement provider in section.DataProviders)
+				foreach (var provider in section.DataProviders)
 				{
 					var dataProviderType = Type.GetType(provider.TypeName, true);
 					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType);
@@ -302,49 +319,42 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly List<Func<ConnectionStringSettings,IDataProvider>> _providerDetectors =
-			new List<Func<ConnectionStringSettings,IDataProvider>>();
+		static readonly List<Func<IConnectionStringSettings,string,IDataProvider>> _providerDetectors =
+			new List<Func<IConnectionStringSettings,string,IDataProvider>>();
 
-		public static void AddProviderDetector(Func<ConnectionStringSettings,IDataProvider> providerDetector)
+		public static void AddProviderDetector(Func<IConnectionStringSettings,string,IDataProvider> providerDetector)
 		{
 			_providerDetectors.Add(providerDetector);
 		}
 
-		internal static bool IsMachineConfig(ConnectionStringSettings css)
-		{
-			string source;
-
-			try
-			{
-				source = css.ElementInformation.Source;
-			}
-			catch (Exception)
-			{
-				source = "";
-			}
-
-			return source == null || source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase);
-		}
-
 		static void InitConnectionStrings()
 		{
-			foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
+			if (DefaultSettings == null)
+				return;
+			foreach (var css in DefaultSettings.ConnectionStrings)
 			{
 				_configurations[css.Name] = new ConfigurationInfo(css);
 
-				if (DefaultConfiguration == null && !IsMachineConfig(css))
+				if (DefaultConfiguration == null && !css.IsGlobal /*IsMachineConfig(css)*/)
 				{
 					DefaultConfiguration = css.Name;
 				}
 			}
 		}
 
-		static int _isInitialized;
+		static readonly object _initSyncRoot = new object();
+		static          bool   _initialized  = false;
 
 		static void InitConfig()
 		{
-			if (Interlocked.Exchange(ref _isInitialized, 1) == 0)
-				InitConnectionStrings();
+			lock (_initSyncRoot)
+			{
+				if (!_initialized)
+				{
+					_initialized = true;
+					InitConnectionStrings();
+				}
+			}
 		}
 
 		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
@@ -377,35 +387,47 @@ namespace LinqToDB.Data
 
 		class ConfigurationInfo
 		{
+			private readonly bool _dataProviderSetted = false;
 			public ConfigurationInfo(string connectionString, IDataProvider dataProvider)
 			{
-				ConnectionString = connectionString;
-				DataProvider     = dataProvider;
+				ConnectionString    = connectionString;
+				_dataProvider       = dataProvider;
+				_dataProviderSetted = dataProvider != null;
 			}
 
-			public ConfigurationInfo(ConnectionStringSettings connectionStringSettings)
+			public ConfigurationInfo(IConnectionStringSettings connectionStringSettings)
 			{
 				ConnectionString = connectionStringSettings.ConnectionString;
 
 				_connectionStringSettings = connectionStringSettings;
 			}
 
-			public  string ConnectionString;
+			private string _connectionString;
+			public  string ConnectionString
+			{
+				get { return _connectionString; }
+				set
+				{
+					if (!_dataProviderSetted)
+						_dataProvider = null;
 
-			private readonly ConnectionStringSettings _connectionStringSettings;
+					_connectionString = value;
+				}
+			}
+
+			private readonly IConnectionStringSettings _connectionStringSettings;
 
 			private IDataProvider _dataProvider;
 			public  IDataProvider  DataProvider
 			{
-				get { return _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings)); }
-				private set { _dataProvider = value; }
+				get { return _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings, ConnectionString)); }
 			}
 
-			static IDataProvider GetDataProvider(ConnectionStringSettings css)
+			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
 				var configuration = css.Name;
 				var providerName  = css.ProviderName;
-				var dataProvider  = _providerDetectors.Select(d => d(css)).FirstOrDefault(dp => dp != null);
+				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
 				{
@@ -430,7 +452,7 @@ namespace LinqToDB.Data
 					}
 				}
 
-				if (dataProvider != null && DefaultConfiguration == null && !IsMachineConfig(css))
+				if (dataProvider != null && DefaultConfiguration == null && !css.IsGlobal/*IsMachineConfig(css)*/)
 				{
 					DefaultConfiguration = css.Name;
 				}
@@ -443,19 +465,24 @@ namespace LinqToDB.Data
 		{
 			ConfigurationInfo ci;
 
-			if (_configurations.TryGetValue(configurationString ?? DefaultConfiguration, out ci))
+			var key = configurationString ?? DefaultConfiguration;
+
+			if (key == null)
+				throw new LinqToDBException("Configuration string is not provided.");
+
+			if (_configurations.TryGetValue(key, out ci))
 				return ci;
 
 			throw new LinqToDBException($"Configuration '{configurationString}' is not defined.");
 		}
 
-		public static void SetConnectionStrings(System.Configuration.Configuration config)
+		public static void SetConnectionStrings(IEnumerable<IConnectionStringSettings> connectionStrings)
 		{
-			foreach (ConnectionStringSettings css in config.ConnectionStrings.ConnectionStrings)
+			foreach (var css in connectionStrings)
 			{
 				_configurations[css.Name] = new ConfigurationInfo(css);
 
-				if (DefaultConfiguration == null && !IsMachineConfig(css))
+				if (DefaultConfiguration == null && !css.IsGlobal /*IsMachineConfig(css)*/)
 				{
 					DefaultConfiguration = css.Name;
 				}
@@ -503,9 +530,9 @@ namespace LinqToDB.Data
 			throw new LinqToDBException($"Configuration '{configurationString}' is not defined.");
 		}
 
-		#endregion
+#endregion
 
-		#region Connection
+#region Connection
 
 		bool          _closeConnection;
 		bool          _closeTransaction;
@@ -554,9 +581,9 @@ namespace LinqToDB.Data
 				OnClosed(this, EventArgs.Empty);
 		}
 
-		#endregion
+#endregion
 
-		#region Command
+#region Command
 
 		public string LastQuery;
 
@@ -785,9 +812,9 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-		#endregion
+#endregion
 
-		#region Transaction
+#region Transaction
 
 		public IDbTransaction Transaction { get; private set; }
 		
@@ -841,6 +868,9 @@ namespace LinqToDB.Data
 				{
 					Transaction.Dispose();
 					Transaction = null;
+
+					if (_command != null)
+						_command.Transaction = null;
 				}
 			}
 		}
@@ -855,13 +885,16 @@ namespace LinqToDB.Data
 				{
 					Transaction.Dispose();
 					Transaction = null;
+
+					if (_command != null)
+						_command.Transaction = null;
 				}
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region MappingSchema
+#region MappingSchema
 
 		private MappingSchema _mappingSchema;
 
@@ -883,9 +916,9 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-		#endregion
+#endregion
 
-		#region ICloneable Members
+#region ICloneable Members
 
 		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection, MappingSchema mappingSchema)
 		{
@@ -907,15 +940,15 @@ namespace LinqToDB.Data
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
 		
-		#endregion
+#endregion
 
-		#region System.IDisposable Members
+#region System.IDisposable Members
 
 		public void Dispose()
 		{
 			Close();
 		}
 
-		#endregion
+#endregion
 	}
 }

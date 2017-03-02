@@ -148,7 +148,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB), Explicit("Fails")]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57), Explicit("Fails")]
 		public void DatePartMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -229,7 +229,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Second));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB), Explicit("Fails")]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57), Explicit("Fails")]
 		public void Millisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -252,12 +252,26 @@ namespace Tests.Linq
 			return new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds);
 		}
 
-		[Test, DataContextSource, Explicit("Fails")]
-		public void TimeOfDay(string context)
+		static TimeSpan RoundMiliseconds(TimeSpan ts)
+		{
+			return new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds + (ts.Milliseconds >= 500 ? 1 : 0));
+		}
+
+		[Test, DataContextSource(TestProvName.MySql57), Explicit("Fails")]
+		public void TimeOfDay1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
+					from t in db.Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+		}
+
+		[Test, IncludeDataContextSource(TestProvName.MySql57)]
+		public void TimeOfDay2(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select RoundMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
 					from t in db.Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
@@ -355,7 +369,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue)).Value.Second);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB), Explicit("Fails")]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57), Explicit("Fails")]
 		public void DateAddMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -416,7 +430,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(-35)).Second);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB), Explicit("Fails")]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57), Explicit("Fails")]
 		public void AddMilliseconds(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -427,8 +441,8 @@ namespace Tests.Linq
 
 		#region DateDiff
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+		[Test, Explicit("Fails"), DataContextSource(
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void SubDateDay(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -438,7 +452,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access), Explicit("Fails")]
 		public void DateDiffDay(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -447,8 +461,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+		[Test, Explicit("Fails"), DataContextSource(
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void SubDateHour(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -458,7 +472,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access), Explicit("Fails")]
 		public void DateDiffHour(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -467,8 +481,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+		[Test, Explicit("Fails"), DataContextSource(
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void SubDateMinute(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -477,8 +491,8 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalMinutes));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+		[Test, Explicit("Fails"), DataContextSource(
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void DateDiffMinute(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -487,8 +501,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+		[Test, Explicit("Fails"), DataContextSource(
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void SubDateSecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -497,8 +511,8 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalSeconds));
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+		[Test, Explicit("Fails"), DataContextSource(
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void DateDiffSecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -507,9 +521,9 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		[Test, DataContextSource(
+		[Test, Explicit("Fails"), DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			TestProvName.MariaDB, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void SubDateMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -520,7 +534,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			TestProvName.MariaDB, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access), Explicit("Fails")]
 		public void DateDiffMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -638,9 +652,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(
+		[Test, Explicit("Fails"), DataContextSource(
 			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
-			TestProvName.MariaDB, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access), Explicit("Fails")]
+			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void DateTimeSum(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -16,8 +16,8 @@ namespace Tests.xUpdate
 	public class MergeTests : TestBase
 	{
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite,
-			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, TestProvName.MariaDB)]
+			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs,
+			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void Merge(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -27,7 +27,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite,
+			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs,
 			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithEmptySource(string context)
 		{
@@ -39,8 +39,8 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB,
-			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -49,10 +49,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false,
+		[Test, Explicit("Fails"), DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase), Explicit("Fails")]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -61,10 +61,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false,
+		[Test, Explicit("Fails"), DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase), Explicit("Fails")]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -73,10 +73,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false,
+		[Test, Explicit("Fails"), DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB,
-			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase), Explicit("Fails")]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate3(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -86,10 +86,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false,
+		[Test, Explicit("Fails"), DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB,
-			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase), Explicit("Fails")]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate4(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -101,10 +101,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false,
+		[Test, Explicit("Fails"), DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB,
-			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase), Explicit("Fails")]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate5(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -121,10 +121,10 @@ namespace Tests.xUpdate
 			[Column(DataType = DataType.NChar, Length = 20)]  public string ncharDataType;
 		}
 
-		[Test, DataContextSource(false,
+		[Test, Explicit("Fails"), DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB,
-			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase), Explicit("Fails")]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -146,10 +146,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false,
+		[Test, Explicit("Fails"), DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB,
-			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase), Explicit("Fails")]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeChar2(string context)
 		{
 			using (var db = new TestDataConnection(context))

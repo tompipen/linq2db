@@ -161,7 +161,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext, Explicit("Fails")]
 		public void FreeTextTable1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from c in db.Category
@@ -176,7 +176,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext, Explicit("Fails")]
 		public void FreeTextTable2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from c in db.Category
@@ -188,10 +188,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, IncludeDataContextSource("Northwind")]
 		public void FreeTextTable3(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.FreeTextTable<Northwind.Category,int>(c => c.Description, "sweetest candy bread and dry meat")
@@ -206,7 +206,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext, Explicit("Fails")]
 		public void FreeText1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Category
@@ -222,7 +222,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext, Explicit("Fails")]
 		public void FreeText2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Category
@@ -238,7 +238,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext, Explicit("Fails")]
 		public void FreeText3(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Category
@@ -254,7 +254,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext, Explicit("Fails")]
 		public void FreeText4(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.Category
@@ -270,7 +270,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void WithUpdateLock(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from t in db.WithUpdateLock<Northwind.Category>()
