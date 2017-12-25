@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -39,15 +36,7 @@ namespace Tests.Samples
 				var dic = pairs.ToDictionary(p => p.New, p => p.Old);
 
 				clone = new QueryVisitor().Convert(clone, e =>
-							  {
-								  var param = e as SqlParameter;
-								  SqlParameter newParam;
-								  if (param != null && dic.TryGetValue(param, out newParam))
-								  {
-									  return newParam;
-								  }
-								  return e;
-							  });
+					e is SqlParameter param && dic.TryGetValue(param, out var newParam) ? newParam : e);
 
 				clone.Parameters.Clear();
 				clone.Parameters.AddRange(original.Parameters);
@@ -55,25 +44,26 @@ namespace Tests.Samples
 				return clone;
 			}
 
-			protected override SelectQuery ProcessQuery(SelectQuery selectQuery)
+			protected override SqlStatement ProcessQuery(SqlStatement statement)
 			{
 				#region Update
 
-				if (selectQuery.IsUpdate)
+				if (statement.QueryType == QueryType.Update)
 				{
-					var source = selectQuery.From.Tables[0].Source as SqlTable;
+					var query = (SelectQuery) statement;
+					var source = query.From.Tables[0].Source as SqlTable;
 					if (source == null)
-						return selectQuery;
+						return statement;
 
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					if (descriptor == null)
-						return selectQuery;
+						return statement;
 
 					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 					if (rowVersion == null)
-						return selectQuery;
+						return statement;
 
-					var newQuery = Clone(selectQuery);
+					var newQuery = Clone(query);
 					source       = newQuery.From.Tables[0].Source as SqlTable;
 					var field    = source.Fields[rowVersion.ColumnName];
 
@@ -81,7 +71,7 @@ namespace Tests.Samples
 					var updateColumn = newQuery.Update.Items.FirstOrDefault(ui => ui.Column is SqlField && ((SqlField)ui.Column).Equals(field));
 					if (updateColumn == null)
 					{
-						updateColumn = new SelectQuery.SetExpression(field, field);
+						updateColumn = new SqlSetExpression(field, field);
 						newQuery.Update.Items.Add(updateColumn);
 					}
 
@@ -95,17 +85,18 @@ namespace Tests.Samples
 
 				#region Insert
 
-				else if (selectQuery.IsInsert)
+				else if (statement.IsInsert())
 				{
-					var source     = selectQuery.Insert.Into;
+					var query      = (SelectQuery) statement;
+					var source     = query.Insert.Into;
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 
 					if (rowVersion == null)
-						return selectQuery;
+						return statement;
 
-					
-					var newQuery = Clone(selectQuery);
+
+					var newQuery = Clone(query);
 
 					var field = newQuery.Insert.Into[rowVersion.ColumnName];
 
@@ -123,7 +114,7 @@ namespace Tests.Samples
 				}
 				#endregion Insert
 
-				return selectQuery;
+				return statement;
 			}
 		}
 
@@ -151,7 +142,11 @@ namespace Tests.Samples
 		[OneTimeSetUp]
 		public void SetUp()
 		{
-			_connection = new InterceptDataConnection(ProviderName.SQLite, "Data Source=:memory:;");
+#if NETSTANDARD1_6 || NETSTANDARD2_0
+			_connection = new InterceptDataConnection(ProviderName.SQLiteMS, "Data Source=:memory:;");
+#else
+			_connection = new InterceptDataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;");
+#endif
 
 			_connection.CreateTable<TestTable>();
 
@@ -233,8 +228,6 @@ namespace Tests.Samples
 			Assert.AreEqual(1, db.Delete(obj1001));
 		}
 
-#if !NOASYNC
-
 		[Test, Parallelizable(ParallelScope.None)]
 		public async Task InsertAndDeleteTestAsync()
 		{
@@ -258,8 +251,6 @@ namespace Tests.Samples
 			Assert.AreEqual(1, await db.DeleteAsync(obj2001));
 		}
 
-#endif
-
 		[Test]
 		public void CheckInsertOrUpdate()
 		{
@@ -280,5 +271,5 @@ namespace Tests.Samples
 			Assert.AreEqual(3, table.Count());
 		}
 #endif
-	}
+		}
 }

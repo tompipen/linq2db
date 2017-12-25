@@ -7,11 +7,11 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
-	public partial class MergeTests
+	public partial class MergeTests : TestBase
 	{
 		[Table("unspecified")]
 		class MergeTypes
@@ -163,7 +163,7 @@ namespace Tests.Merge
 
 		private void PrepareTypesData(IDataContext db)
 		{
-			using (new DisableLogging())
+			//using (new DisableLogging())
 			{
 				GetTypes1(db).Delete();
 				GetTypes2(db).Delete();
@@ -351,7 +351,7 @@ namespace Tests.Merge
 		// Expected: '*'
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
-		[Test, DataContextSource(false, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
 		public void TestMergeTypes(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -412,7 +412,7 @@ namespace Tests.Merge
 			if (context != ProviderName.Informix)
 				Assert.AreEqual(expected.FieldGuid, actual.FieldGuid);
 
-			if (context != ProviderName.SQLite)
+			if (context != ProviderName.SQLiteClassic && context != ProviderName.SQLiteMS)
 				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
 			if (context != ProviderName.SqlServer2000
@@ -502,7 +502,8 @@ namespace Tests.Merge
 				&& context != TestProvName.MySql57
 				&& context != TestProvName.MariaDB
 				&& context != ProviderName.Access
-				&& context != ProviderName.SQLite
+				&& context != ProviderName.SQLiteClassic
+				&& context != ProviderName.SQLiteMS
 				&& context != ProviderName.Sybase
 				&& context != ProviderName.DB2
 				&& context != ProviderName.SapHana)
@@ -602,7 +603,8 @@ namespace Tests.Merge
 				|| context == ProviderName.OracleManaged
 				|| context == ProviderName.OracleNative
 				|| context == ProviderName.SqlCe
-				|| context == ProviderName.SQLite
+				|| context == ProviderName.SQLiteClassic
+				|| context == ProviderName.SQLiteMS
 				|| context == ProviderName.MySql
 				// MySql57 and MariaDB work, but column is disabled...
 				|| context == TestProvName.MySql57
@@ -659,7 +661,7 @@ namespace Tests.Merge
 			Assert.AreEqual(expected, actual);
 		}
 
-		[Test, MergeDataContextSource]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.Sybase)]
 		public void TestTypesInsertByMerge(string context)
 		{
 			using (var db = new TestDataConnection(context))

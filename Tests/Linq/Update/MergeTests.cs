@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
@@ -33,12 +33,12 @@ namespace Tests.Merge
 
 		public class MergeDataContextSourceAttribute : DataContextSourceAttribute
 		{
-			private static string[] Unsupported = new []
+			static string[] Unsupported = new []
 			{
 				ProviderName.Access,
 				ProviderName.SqlCe,
-				ProviderName.SQLite,
-				TestProvName.SQLiteMs,
+				ProviderName.SQLiteClassic,
+				ProviderName.SQLiteMS,
 				ProviderName.SqlServer2000,
 				ProviderName.SqlServer2005,
 				ProviderName.PostgreSQL,
